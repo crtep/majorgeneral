@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--APP-->
+<title>Major General</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,300..900&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: a risograph zine on fluoro-yellow stock. Two inks (blue + pink) misregistered,
+   one red knife line. The number is the poster; the cut slips stack below it. */
+:root {
+  --paper: #ffe23d;      /* fluorescent yellow stock */
+  --paper-2: #ffd21a;    /* deeper fold / panel */
+  --ink: #1d36b8;        /* riso medium blue */
+  --pink: #ff3ea5;       /* riso fluorescent pink */
+  --knife: #e3001b;      /* the cut */
+  --ghost: rgba(29, 54, 184, .38);
+  --display: "Anybody", "Arial Narrow", Impact, sans-serif;
+  --type: "Courier Prime", "Courier New", Courier, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 16px/1.45 var(--type);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px 64px;
+  overflow-x: hidden;
+}
+/* paper grain */
+body::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 50;
+  opacity: .22; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .45  0 0 0 0 .1  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 22px; }
+
+/* ---------- masthead ---------- */
+.mast {
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+  gap: 10px 24px; border-bottom: 3px solid var(--ink); padding-bottom: 10px;
+}
+.mast h1 {
+  margin: 0; font: 900 clamp(30px, 6vw, 58px)/.86 var(--display);
+  font-variation-settings: "wdth" 150; letter-spacing: -.01em; text-transform: uppercase;
+  color: var(--ink); text-shadow: 3px 2px 0 var(--pink);
+}
+.mast h1 span { display: block; font-size: .42em; font-variation-settings: "wdth" 60; letter-spacing: .14em; color: var(--pink); text-shadow: none; }
+.dial { display: grid; gap: 4px; }
+.dial label { font: 700 11px/1 var(--type); letter-spacing: .2em; text-transform: uppercase; }
+.dial input {
+  width: min(320px, 100%); font: 700 26px/1 var(--type); letter-spacing: .18em;
+  color: var(--ink); background: var(--paper-2);
+  border: 0; border-bottom: 3px solid var(--ink); padding: 8px 10px 6px; border-radius: 0;
+  outline: none; caret-color: var(--knife);
+}
+.dial input:focus-visible { box-shadow: 4px 4px 0 var(--pink); }
+
+/* ---------- the number ---------- */
+.stage { position: relative; }
+.digits {
+  display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: stretch;
+  user-select: none; -webkit-user-select: none; touch-action: manipulation;
+}
+.d {
+  position: relative; display: grid; justify-items: center; cursor: crosshair;
+  padding: 0 .02em; -webkit-tap-highlight-color: transparent;
+}
+.d b {
+  display: block; font-weight: 900; font-family: var(--display);
+  font-size: var(--dsize, 140px); line-height: .9;
+  font-variation-settings: "wdth" var(--dwdth, 100);
+  color: var(--ink); text-shadow: .035em .02em 0 var(--pink);
+  font-variant-numeric: tabular-nums;
+  transition: color .15s;
+}
+.d small {
+  font: 700 clamp(8px, calc(var(--dsize, 140px) * .1), 14px)/1.2 var(--type); letter-spacing: .02em;
+  color: var(--pink); filter: brightness(.82); white-space: nowrap; padding-top: 4px;
+}
+.d.seg-odd b { color: #0f2490; }
+.gap {
+  position: relative; width: clamp(14px, calc(var(--dsize, 140px) * .16), 34px);
+  border: 0; background: none; padding: 0; cursor: pointer; color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.gap::before { /* hover guide */
+  content: ""; position: absolute; left: 50%; top: 6%; bottom: 14%; width: 0;
+  border-left: 2px dashed var(--ink); opacity: 0; transform: translateX(-50%); transition: opacity .12s;
+}
+.gap:hover::before, .gap:focus-visible::before { opacity: .45; }
+.gap:focus-visible { outline: none; }
+.gap::after { /* the knife */
+  content: ""; position: absolute; left: 50%; top: -8px; bottom: -6px; width: 5px;
+  background: var(--knife); transform: translateX(-50%) scaleY(0); transform-origin: top;
+  transition: transform .18s cubic-bezier(.3,1.4,.5,1);
+  box-shadow: 2px 0 0 rgba(255, 62, 165, .55);
+}
+.gap.cut::after { transform: translateX(-50%) scaleY(1); }
+.gap.cut::before { opacity: 0; }
+
+.tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn {
+  font: 700 13px/1 var(--type); letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink); background: transparent; border: 2px solid var(--ink); border-radius: 0;
+  padding: 9px 12px 8px; cursor: pointer;
+}
+.btn:hover { background: var(--ink); color: var(--paper); }
+.btn:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+.btn.knife { border-color: var(--knife); color: var(--knife); }
+.btn.knife:hover { background: var(--knife); color: var(--paper); }
+.tip { font-size: 13px; opacity: .8; }
+
+/* ---------- the phrase (ticker tape) ---------- */
+.tape {
+  position: relative; background: var(--pink); color: var(--paper);
+  padding: 14px 16px 16px; transform: rotate(-.6deg);
+  clip-path: polygon(0 4%, 2% 0, 5% 5%, 9% 0, 13% 4%, 18% 0, 24% 5%, 30% 1%, 37% 5%, 44% 0, 52% 4%, 60% 0, 67% 5%, 75% 1%, 82% 5%, 89% 0, 95% 4%, 100% 0, 100% 96%, 97% 100%, 92% 95%, 86% 100%, 79% 96%, 71% 100%, 63% 95%, 55% 100%, 47% 96%, 39% 100%, 31% 95%, 23% 100%, 15% 96%, 8% 100%, 3% 95%, 0 100%);
+  display: grid; gap: 6px; min-width: 0;
+}
+.tape .lbl { font: 700 11px/1 var(--type); letter-spacing: .24em; text-transform: uppercase; color: var(--ink); }
+.phrase {
+  font: 800 clamp(26px, 5vw, 52px)/1.04 var(--display); font-variation-settings: "wdth" 88;
+  text-wrap: balance; overflow-wrap: anywhere; color: var(--paper); min-height: 1em;
+}
+.phrase .w { white-space: nowrap; }
+.phrase .w.ghost { color: transparent; -webkit-text-stroke: 1.5px var(--paper); font-style: italic; }
+.phrase .w.none { color: var(--ink); opacity: .7; font-family: var(--type); font-weight: 700; font-size: .55em; vertical-align: middle; letter-spacing: .08em; }
+.tape-row { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: flex-end; justify-content: space-between; }
+.tape .btn { border-color: var(--ink); color: var(--ink); }
+.tape .btn:hover { background: var(--ink); color: var(--pink); }
+
+/* ---------- the slips ---------- */
+.slips { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 18px; align-items: start; }
+.slip {
+  min-width: 0; background: var(--paper-2); border-top: 6px solid var(--ink);
+  padding: 12px 14px 14px; display: grid; gap: 10px; position: relative;
+}
+.slip:nth-child(even) { border-top-color: var(--pink); }
+.slip:nth-child(odd) { transform: rotate(.35deg); }
+.slip:nth-child(even) { transform: rotate(-.45deg); }
+.slip header { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.slip .code {
+  font: 900 34px/1 var(--display); font-variation-settings: "wdth" 70; letter-spacing: .02em;
+  font-variant-numeric: tabular-nums; text-shadow: 2px 1px 0 var(--pink);
+}
+.slip .sounds { font: 700 12px/1.2 var(--type); letter-spacing: .1em; text-transform: lowercase; text-align: right; }
+.slip .count { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; opacity: .7; }
+.words { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.word {
+  border: 0; background: none; color: var(--ink); padding: 1px 3px; cursor: pointer; border-radius: 0;
+  font-family: var(--display); font-weight: 700; line-height: 1.05;
+  font-variation-settings: "wdth" 90;
+}
+.word:hover { background: var(--pink); color: var(--paper); }
+.word:focus-visible { outline: 2px solid var(--knife); outline-offset: 1px; }
+.word.on { background: var(--ink); color: var(--paper); box-shadow: 3px 3px 0 var(--pink); }
+.more { justify-self: start; }
+.empty { font-size: 14px; }
+.empty strong { color: var(--knife); }
+
+/* whole-number line */
+.verdict { font: 700 15px/1.4 var(--type); }
+.verdict em { font-style: normal; background: var(--ink); color: var(--paper); padding: 0 5px; }
+
+/* ---------- key ---------- */
+.key { border-top: 3px solid var(--ink); padding-top: 12px; display: grid; gap: 10px; }
+.key h2 { margin: 0; font: 700 11px/1 var(--type); letter-spacing: .24em; text-transform: uppercase; }
+.keyrow { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 0; border: 2px solid var(--ink); }
+.keyrow div { padding: 6px 4px; text-align: center; border-right: 2px solid var(--ink); min-width: 0; }
+.keyrow div:last-child { border-right: 0; }
+.keyrow b { display: block; font: 900 28px/1 var(--display); font-variation-settings: "wdth" 70; }
+.keyrow span { display: block; font: 700 12px/1.25 var(--type); color: var(--knife); overflow-wrap: anywhere; }
+.fine { font-size: 13px; max-width: 70ch; }
+@media (max-width: 560px) {
+  .keyrow { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .keyrow div:nth-child(5) { border-right: 0; }
+  .keyrow div:nth-child(-n+5) { border-bottom: 2px solid var(--ink); }
+}
+.loading { font: 700 14px/1 var(--type); letter-spacing: .2em; text-transform: uppercase; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <h1>Major General<span>number → phonetic → picture</span></h1>
+    <div class="dial">
+      <label for="num">Dial a number</label>
+      <input id="num" inputmode="numeric" autocomplete="off" spellcheck="false" value="30710473" aria-describedby="hint">
+    </div>
+  </header>
+
+  <section class="stage" aria-label="Number">
+    <div class="digits" id="digits"></div>
+  </section>
+
+  <div class="tools">
+    <button class="btn knife" id="auto" type="button">Auto-cut</button>
+    <button class="btn" id="clear" type="button">Clear cuts</button>
+    <span class="tip" id="hint">Tap between digits to cut. Tap a word to put it in the phrase.</span>
+  </div>
+
+  <div class="tape" aria-live="polite">
+    <div class="tape-row">
+      <span class="lbl">Your phrase</span>
+      <button class="btn" id="copy" type="button">Copy</button>
+    </div>
+    <div class="phrase" id="phrase"></div>
+  </div>
+
+  <div class="verdict" id="verdict"></div>
+  <section class="slips" id="slips" aria-label="Suggestions"><p class="loading">Inking the dictionary…</p></section>
+
+  <footer class="key">
+    <h2>The key · consonant sounds only, spelling ignored</h2>
+    <div class="keyrow">
+      <div><b>0</b><span>s z</span></div>
+      <div><b>1</b><span>t d th</span></div>
+      <div><b>2</b><span>n ng</span></div>
+      <div><b>3</b><span>m</span></div>
+      <div><b>4</b><span>r</span></div>
+      <div><b>5</b><span>l</span></div>
+      <div><b>6</b><span>j sh ch zh</span></div>
+      <div><b>7</b><span>k g</span></div>
+      <div><b>8</b><span>f v</span></div>
+      <div><b>9</b><span>p b</span></div>
+    </div>
+    <p class="fine">Vowels and w, h, y are free. Matching goes by pronunciation (CMU Pronouncing Dictionary), so <i>the</i> is 1, <i>knee</i> is 2, <i>box</i> is 970, and <i>finger</i> is 8274. Words are ordered by how often they turn up in film subtitles.</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const SOUNDS = ['s z', 't d', 'n', 'm', 'r', 'l', 'j sh', 'k g', 'f v', 'p b'];
+  const FIRST = 40, STEP = 120;
+
+  const $ = id => document.getElementById(id);
+  const numEl = $('num'), digitsEl = $('digits'), slipsEl = $('slips'),
+        phraseEl = $('phrase'), verdictEl = $('verdict');
+
+  let dict = null;              // Map code -> [words]
+  let num = '';
+  let cuts = new Set();         // positions 1..n-1
+  let picks = new Map();        // "a:b" -> word
+  let shown = new Map();        // "a:b" -> how many words visible
+  let autoList = [], autoIdx = -1, autoFor = '';
+
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  };
+
+  function words(code) { return (dict && dict.get(code)) || []; }
+
+  function segments() {
+    const pts = [0, ...[...cuts].sort((a, b) => a - b), num.length];
+    const segs = [];
+    for (let i = 0; i < pts.length - 1; i++) segs.push([pts[i], pts[i + 1]]);
+    return segs;
+  }
+
+  function sizeDigits() {
+    const n = Math.max(num.length, 1);
+    const w = digitsEl.clientWidth || window.innerWidth - 32;
+    const wdth = n > 12 ? 55 : n > 6 ? 75 : 100;
+    digitsEl.style.setProperty('--dwdth', wdth);
+    // measure, then scale to fit one row (two passes: the gap width is clamped)
+    let size = 100;
+    for (let k = 0; k < 4; k++) {
+      digitsEl.style.setProperty('--dsize', size + 'px');
+      let total = 0;
+      for (const el of digitsEl.children) total += el.getBoundingClientRect().width;
+      if (!total) return;
+      size = Math.min(170, size * (w - 4) / total * 0.985);
+    }
+    // below this it wraps onto more rows instead of shrinking forever
+    digitsEl.style.setProperty('--dsize', Math.max(38, Math.floor(size)) + 'px');
+  }
+
+  function renderDigits() {
+    digitsEl.innerHTML = '';
+    const segOf = [];
+    segments().forEach(([a, b], si) => { for (let i = a; i < b; i++) segOf[i] = si; });
+    [...num].forEach((ch, i) => {
+      if (i > 0) {
+        const g = document.createElement('button');
+        g.type = 'button';
+        g.className = 'gap' + (cuts.has(i) ? ' cut' : '');
+        g.setAttribute('aria-label', (cuts.has(i) ? 'Remove cut' : 'Cut') + ` between ${num[i - 1]} and ${ch}`);
+        g.setAttribute('aria-pressed', cuts.has(i));
+        g.onclick = () => toggleCut(i);
+        digitsEl.appendChild(g);
+      }
+      const d = document.createElement('div');
+      d.className = 'd' + (segOf[i] % 2 ? ' seg-odd' : '');
+      d.innerHTML = `<b>${ch}</b><small>${SOUNDS[+ch]}</small>`;
+      d.onclick = e => {
+        const r = d.getBoundingClientRect();
+        const pos = e.clientX < r.left + r.width / 2 ? i : i + 1;
+        if (pos > 0 && pos < num.length) toggleCut(pos);
+      };
+      digitsEl.appendChild(d);
+    });
+    sizeDigits();
+  }
+
+  function toggleCut(i) {
+    cuts.has(i) ? cuts.delete(i) : cuts.add(i);
+    autoIdx = -1;
+    render();
+  }
+
+  function rankSize(r) {
+    // most common words print biggest
+    if (r < 3) return 30;
+    if (r < 8) return 24;
+    if (r < 20) return 19;
+    if (r < 50) return 16;
+    return 14;
+  }
+
+  function renderSlips() {
+    if (!dict) return;
+    slipsEl.innerHTML = '';
+    const segs = segments();
+    if (!num) {
+      slipsEl.innerHTML = '<p class="empty">Type some digits above.</p>';
+      verdictEl.textContent = '';
+      return;
+    }
+    if (segs.length === 1) {
+      const n = words(num).length;
+      verdictEl.innerHTML = n
+        ? `The whole number <em>${num}</em> is one word. ${n} to pick from.`
+        : `No single word spells <em>${num}</em>. Cut it.`;
+    } else {
+      const dead = segs.filter(([a, b]) => !words(num.slice(a, b)).length).length;
+      verdictEl.innerHTML = dead
+        ? `${segs.length} pieces · <em>${dead}</em> still without a word.`
+        : `${segs.length} pieces · every piece has a word.`;
+    }
+    segs.forEach(([a, b]) => {
+      const code = num.slice(a, b), key = a + ':' + b, list = words(code);
+      const slip = document.createElement('article');
+      slip.className = 'slip';
+      const snd = [...code].map(c => SOUNDS[+c].split(' ')[0]).join('·');
+      slip.innerHTML = `<header><span class="code">${code}</span><span class="sounds">${snd}<br><span class="count">${list.length ? list.length + ' word' + (list.length > 1 ? 's' : '') : 'none'}</span></span></header>`;
+      if (!list.length) {
+        const p = document.createElement('p');
+        p.className = 'empty';
+        p.innerHTML = code.length > 1
+          ? `<strong>No words for ${code}.</strong> Tap between its digits to cut again.`
+          : `<strong>No words for ${code}.</strong>`;
+        slip.appendChild(p);
+      } else {
+        const box = document.createElement('div');
+        box.className = 'words';
+        const lim = shown.get(key) || FIRST;
+        list.slice(0, lim).forEach((w, r) => {
+          const bt = document.createElement('button');
+          bt.type = 'button';
+          bt.className = 'word' + (picks.get(key) === w ? ' on' : '');
+          bt.style.fontSize = rankSize(r) + 'px';
+          bt.textContent = w;
+          bt.setAttribute('aria-pressed', picks.get(key) === w);
+          bt.onclick = () => {
+            picks.get(key) === w ? picks.delete(key) : picks.set(key, w);
+            renderSlips(); renderPhrase();
+          };
+          box.appendChild(bt);
+        });
+        slip.appendChild(box);
+        if (list.length > lim) {
+          const m = document.createElement('button');
+          m.type = 'button'; m.className = 'btn more';
+          m.textContent = `+ ${Math.min(STEP, list.length - lim)} rarer`;
+          m.onclick = () => { shown.set(key, lim + STEP); renderSlips(); };
+          slip.appendChild(m);
+        }
+      }
+      slipsEl.appendChild(slip);
+    });
+  }
+
+  function renderPhrase() {
+    if (!dict) return;
+    phraseEl.innerHTML = '';
+    segments().forEach(([a, b], i) => {
+      const key = a + ':' + b, code = num.slice(a, b);
+      const s = document.createElement('span');
+      const pick = picks.get(key), top = words(code)[0];
+      if (pick) { s.className = 'w'; s.textContent = pick; }
+      else if (top) { s.className = 'w ghost'; s.textContent = top; s.title = 'Suggestion. Tap a word below to choose.'; }
+      else { s.className = 'w none'; s.textContent = '[' + code + ']'; }
+      if (i) phraseEl.append(' ');
+      phraseEl.appendChild(s);
+    });
+  }
+
+  function render() {
+    renderDigits(); renderSlips(); renderPhrase();
+  }
+
+  function setNumber(v, keep) {
+    const clean = (v || '').replace(/\D/g, '').slice(0, 40);
+    if (clean === num && keep) return;
+    num = clean;
+    cuts = new Set(); picks = new Map(); shown = new Map(); autoIdx = -1;
+    store.set('mg.num', num);
+    render();
+  }
+
+  // ----- auto-cut: fewest pieces, then pieces with the most words -----
+  function partitions() {
+    const n = num.length, best = new Array(n + 1).fill(Infinity);
+    best[n] = 0;
+    for (let i = n - 1; i >= 0; i--)
+      for (let j = i + 1; j <= n; j++)
+        if (words(num.slice(i, j)).length && best[j] + 1 < best[i]) best[i] = best[j] + 1;
+    if (best[0] === Infinity) return [];
+    const out = [], max = best[0] + 1;
+    let budget = 40000;
+    (function dfs(i, acc) {
+      if (out.length >= 300 || --budget < 0) return;
+      if (i === n) { out.push(acc.slice()); return; }
+      if (acc.length + best[i] > max) return;
+      for (let j = n; j > i; j--) {
+        if (!words(num.slice(i, j)).length) continue;
+        acc.push(j); dfs(j, acc); acc.pop();
+      }
+    })(0, []);
+    const score = p => {
+      let s = p.length * 100, a = 0;
+      for (const b of p) { s -= Math.log(1 + words(num.slice(a, b)).length); a = b; }
+      return s;
+    };
+    return out.sort((x, y) => score(x) - score(y));
+  }
+
+  $('auto').onclick = () => {
+    if (!dict || !num) return;
+    if (autoFor !== num || autoIdx < 0) { autoList = partitions(); autoFor = num; }
+    if (!autoList.length) {
+      verdictEl.innerHTML = `Some digit here has no word at all. Try a different number.`;
+      return;
+    }
+    autoIdx = (autoIdx + 1) % autoList.length;
+    const p = autoList[autoIdx];
+    const keepIdx = autoIdx;
+    cuts = new Set(p.slice(0, -1)); picks = new Map();
+    render();
+    autoIdx = keepIdx;
+    $('auto').textContent = autoList.length > 1 ? `Auto-cut ${autoIdx + 1}/${autoList.length}` : 'Auto-cut';
+  };
+  $('clear').onclick = () => { cuts = new Set(); picks = new Map(); autoIdx = -1; $('auto').textContent = 'Auto-cut'; render(); };
+  $('copy').onclick = async () => {
+    const t = phraseEl.textContent.trim();
+    const b = $('copy');
+    try { await navigator.clipboard.writeText(t); b.textContent = 'Copied'; }
+    catch {
+      const r = document.createRange(); r.selectNodeContents(phraseEl);
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      b.textContent = 'Selected';
+    }
+    setTimeout(() => (b.textContent = 'Copy'), 1400);
+  };
+
+  numEl.addEventListener('input', () => {
+    const pos = numEl.selectionStart;
+    const clean = numEl.value.replace(/\D/g, '');
+    if (clean !== numEl.value) { numEl.value = clean; try { numEl.setSelectionRange(pos - 1, pos - 1); } catch {} }
+    $('auto').textContent = 'Auto-cut';
+    setNumber(clean, true);
+  });
+  addEventListener('resize', sizeDigits);
+
+  // ----- boot -----
+  const saved = store.get('mg.num');
+  const demo = !saved || saved === '30710473';
+  num = demo ? '30710473' : saved;
+  numEl.value = num;
+  if (demo) { cuts = new Set([3, 4]); }
+  renderDigits();
+
+  fetch('words.txt').then(r => {
+    if (!r.ok) throw new Error(r.status);
+    return r.text();
+  }).then(txt => {
+    dict = new Map();
+    for (const line of txt.split('\n')) {
+      const sp = line.indexOf(' ');
+      if (sp > 0) dict.set(line.slice(0, sp), line.slice(sp + 1).split(' '));
+    }
+    if (demo) { picks.set('0:3', 'mask'); picks.set('3:4', 'the'); picks.set('4:8', 'sorghum'); }
+    render();
+  }).catch(() => {
+    slipsEl.innerHTML = '<p class="empty"><strong>The word list did not load.</strong> Open this page from a web server so words.txt can be fetched (for example: python3 -m http.server).</p>';
+  });
+})();
+</script>
+</body>
+</html>
